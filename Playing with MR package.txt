@@ -1,0 +1,65 @@
+#*****************************************
+#* Playing with MR package
+#* Author: Amy Mason (almost all code taken from paper: “MendelianRandomization: an R package for performing Mendelian randomization analyses using summarized data” as example code) 
+#* Date created: October 2017
+#* Inputs:
+#* Outputs:
+#* Other programs needed:
+#****************************************
+
+# The purpose of this file is to experiment with the Mendelian Randomisation R package
+#
+#
+# loads packages
+library(MendelianRandomization)
+
+######################### input
+
+#creates/ formats as MRInput object
+#The variables hdlc, hdlcse, chdlodds and chdloddsse are provided as part of the 
+#MendelianRandomization packageas example data, and represent the associations of 28 variants
+#with high-density lipoprotein cholesterol (HDL-c) and their standard errors (hdlc and hdlcse),
+# and the associationsof the same 28 variants with coronary heart disease
+# (CHD) risk and their standard errors (chdlodds and chdloddsse), taken from Waterworth et al.
+# output: reports the causal estimate and its standard error, a 95% confidence interval based on
+#a normal approximation, and the residual standard error and associated heterogeneity test statistic
+
+MRdata_HDL_CHD <- mr_input(bx=hdlc, bxse=hdlcse, by=chdlodds, byse=chdloddsse)
+
+######################### models
+
+# implement inverse-variance weighted (IVW) method 
+mr_ivw(MRdata_HDL_CHD)
+
+# implement MR-Egger method
+mr_egger(MRdata_HDL_CHD)
+
+# implement mr_median method
+mr_median(MRdata_HDL_CHD)
+
+# all three methods & output table
+mr_allmethods(MRdata_HDL_CHD)
+
+####################### graphical outputs
+
+#static graph illustrating the various causal estimates
+mr_plot(mr_allmethods(MRdata_HDL_CHD,method="main"))
+
+#interactive graph of the genetic associations with the outcome against associations with the exposure
+mr_plot(MRdata_HDL_CHD)
+
+mr_plot(MRdata_HDL_CHD, orientate=TRUE, line="egger")
+
+
+
+######################### taking data straight from phenoscanner
+#This code takes the file provided by PhenoScanner, and
+#outputs an MRInput object consisting of the genetic associations
+#with the exposure “log(eGFR creatinine)” estimated  in Europeans and reported by the study with PubMed ID
+#26831199,21 and genetic associations with the outcome
+#“Asthma” estimated in Europeans and reported by the
+#study with PubMed ID 20860503 
+
+path.proxies <- system.file("extdata", "vitD_snps_PhenoScanner_proxies.csv", package='MendelianRandomization')
+keep= extract.pheno.csv(exposure="log(eGFR creatinine)", pmidE=26831199, ancestryE='European', outcome='Asthma', pmidO=20860503, ancestryO='European',rsq.proxy=0.6, file=path.proxies, snps='all')
+mr_ivw(keep)
